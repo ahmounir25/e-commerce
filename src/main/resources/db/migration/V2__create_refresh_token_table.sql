@@ -1,0 +1,6 @@
+CREATE TABLE refresh_token (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    email VARCHAR(255) NOT NULL,
+    token VARCHAR(500) NOT NULL,
+    expiry_date DATETIME NOT NULL
+);
