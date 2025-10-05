@@ -20,6 +20,8 @@ public class User {
     private String email;
     @Column(name = "password")
     private String password;
+    @Column(name = "is_verified")
+    private boolean isVerified;
 
     @ManyToMany(cascade = {CascadeType.PERSIST,CascadeType.MERGE})
     @JoinTable(name = "user_roles",
@@ -118,5 +120,13 @@ public class User {
                 ", email='" + email + '\'' +
                 ", password='" + password + '\'' +
                 '}';
+    }
+
+    public boolean isVerified() {
+        return isVerified;
+    }
+
+    public void setVerified(boolean verified) {
+        isVerified = verified;
     }
 }

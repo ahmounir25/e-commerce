@@ -13,5 +13,6 @@ public interface userService {
     void logout(String email);
     RefreshResponse refresh(String token);
     User findUserByEmail(String email);
+    void save(User user);
 
 }

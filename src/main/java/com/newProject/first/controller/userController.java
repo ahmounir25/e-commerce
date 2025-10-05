@@ -10,6 +10,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.logging.Logger;
+
 @RestController
 public class userController {
     private userService userService;
@@ -75,6 +77,16 @@ public class userController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(ex.getMessage());
         }
 
+    }
+
+    @GetMapping("/verify")
+    private ResponseEntity<?> verify(@RequestParam String token)
+    {
+        String email=jwtService.getVerficationEmail(token);
+        User myUser=userService.findUserByEmail(email);
+        myUser.setVerified(true);
+        userService.save(myUser);
+        return ResponseEntity.ok().body("Verified");
     }
 
 }

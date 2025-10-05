@@ -24,6 +24,7 @@ public class userServiceImpl implements userService {
     private JwtService jwtService;
     private refreshTokenRepo refreshTokenRepo;
     private roleRepository roleRepository;
+    private EmailVerificationService verificationService;
     @Value("${jwt.expiryRefreshToken}")
     private long expirationTimeForRefresh;
 
@@ -33,13 +34,15 @@ public class userServiceImpl implements userService {
                            PasswordEncoder refreshTokenEncoder,
                            JwtService jwtService,
                            refreshTokenRepo refreshTokenRep,
-                           roleRepository roleRepository) {
+                           roleRepository roleRepository,
+                           EmailVerificationService verificationService) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.refreshTokenEncoder = refreshTokenEncoder;
         this.jwtService = jwtService;
         this.refreshTokenRepo = refreshTokenRep;
         this.roleRepository = roleRepository;
+        this.verificationService=verificationService;
     }
 
     @Override
@@ -53,8 +56,9 @@ public class userServiceImpl implements userService {
         user.getRoles().add(roleRepository.findByRole("USER").orElseThrow(() -> new RuntimeException("not found")));
         user.setCart(new Cart(new Date()));
         user.getCart().setUser(user);
-
+        String verificationToken= jwtService.generateVerifyToken(request.getEmail());
         userRepository.save(user);
+        verificationService.sendVerifyMail(request.getEmail(),verificationToken);
     }
 
     @Override
@@ -95,6 +99,11 @@ public class userServiceImpl implements userService {
     }
 
     @Override
+    public void save(User user){
+        userRepository.save(user);
+    }
+
+    @Override
     public RefreshResponse refresh(String token) {
 
         String hashed=hashToken(token);
@@ -115,7 +124,7 @@ public class userServiceImpl implements userService {
         if (!userRepository.existsByEmail(email)) {
             throw new RuntimeException("Not Exist");
         }
-        User user=userRepository.findUserByEmail(email).orElseThrow();
+        User user=userRepository.findUserByEmail(email).orElseThrow(()->new RuntimeException("Not Found"));
         return user ;
     }
 

@@ -28,6 +28,14 @@ public class JwtService {
         this.userRepository = userRepository;
     }
 
+    public String generateVerifyToken(String email) {
+        return Jwts.builder().
+                setSubject(email).
+                setIssuedAt(new Date()).
+                setExpiration(new Date((System.currentTimeMillis() + expirationTimeForAccess))).
+                signWith(secretKey, SignatureAlgorithm.HS256).compact();
+    }
+
     public String generateAccessToken(String email) {
         User user = userRepository.findUserByEmail(email).orElseThrow();
 
@@ -62,5 +70,10 @@ public class JwtService {
         String email=parseToken(token).getSubject();
         return email;
     }
+    public  String getVerficationEmail(String token){
+        String email=parseToken(token).getSubject();
+        return email;
+    }
+
 
 }
