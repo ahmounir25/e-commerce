@@ -14,5 +14,6 @@ public interface userService {
     RefreshResponse refresh(String token);
     User findUserByEmail(String email);
     void save(User user);
+    void reSendVerification(verifyRequest request);
 
 }

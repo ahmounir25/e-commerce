@@ -89,4 +89,11 @@ public class userController {
         return ResponseEntity.ok().body("Verified");
     }
 
+    @PostMapping("/reverification")
+    public ResponseEntity<?>reSendVerification(@Valid @RequestBody verifyRequest verifyRequest)
+    {
+        userService.reSendVerification(verifyRequest);
+        return ResponseEntity.ok().body("ReSend Verification");
+    }
+
 }

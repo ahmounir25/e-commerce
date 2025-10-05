@@ -104,6 +104,12 @@ public class userServiceImpl implements userService {
     }
 
     @Override
+    public void reSendVerification(verifyRequest request) {
+        String token =jwtService.generateVerifyToken(request.getEmail());
+        verificationService.sendVerifyMail(request.getEmail(),token);
+    }
+
+    @Override
     public RefreshResponse refresh(String token) {
 
         String hashed=hashToken(token);
