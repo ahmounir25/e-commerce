@@ -29,33 +29,34 @@ public class orderController {
                            JwtService jwtService,
                            userService userService,
                            cartService cartService,
-                           productService productService){
-        this.orderService=orderService;
-        this.jwtService=jwtService;
-        this.userService=userService;
-        this.cartService=cartService;
-        this.productService=productService;
+                           productService productService) {
+        this.orderService = orderService;
+        this.jwtService = jwtService;
+        this.userService = userService;
+        this.cartService = cartService;
+        this.productService = productService;
     }
+
     @GetMapping("/orders")
     public ResponseEntity<Page<ordersResponse>> getOrders(@RequestHeader(name = "Authorization") String authHeader,
-                                                          @PageableDefault(size = 5) Pageable pageable){
-        if (authHeader==null||!authHeader.startsWith("Bearer ")){
+                                                          @PageableDefault(size = 5) Pageable pageable) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         }
-        String email=jwtService.getEmail(authHeader);
-        Page<ordersResponse> orders=orderService.findOrders(email,pageable);
+        String email = jwtService.getEmail(authHeader);
+        Page<ordersResponse> orders = orderService.findOrders(email, pageable);
 
         return ResponseEntity.ok().body(orders);
     }
 
     @PostMapping("/orders")
-    public ResponseEntity<?> addOrder(@RequestHeader(name = "Authorization") String authHeader){
-        if (authHeader==null||!authHeader.startsWith("Bearer ")){
+    public ResponseEntity<?> addOrder(@RequestHeader(name = "Authorization") String authHeader) {
+        if (authHeader == null || !authHeader.startsWith("Bearer ")) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid auth header");
         }
-        String email=jwtService.getEmail(authHeader);
+        String email = jwtService.getEmail(authHeader);
         orderService.save(email);
-        return  ResponseEntity.ok().body("order has been placed");
+        return ResponseEntity.ok().body("order has been placed");
     }
 
 }
