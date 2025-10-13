@@ -3,7 +3,8 @@ name: CI PIPELINE
 on:
   push:
     branches: [ "dev","master" ]
-  pull-request:
+
+  pull_request:
     branches: [ "dev","master" ]
 
 
