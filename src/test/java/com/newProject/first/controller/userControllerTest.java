@@ -1,9 +1,14 @@
 package com.newProject.first.controller;
 
+import com.newProject.first.DAO.refreshTokenRepo;
+import com.newProject.first.DAO.roleRepository;
 import com.newProject.first.DAO.userRepository;
 import com.newProject.first.DTO.LoginResponse;
+import com.newProject.first.entity.RefreshToken;
+import com.newProject.first.entity.Role;
 import com.newProject.first.entity.User;
 import com.newProject.first.service.JwtService;
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.platform.engine.TestExecutionResult;
@@ -14,8 +19,13 @@ import org.springframework.data.web.JsonPath;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
+
+import javax.xml.crypto.Data;
+
+import java.util.Date;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -23,24 +33,39 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@ActiveProfiles("test")
 public class userControllerTest {
-    private userRepository userRepository;
-    private JwtService jwtService;
-    private MockMvc mockMvc;
-    private PasswordEncoder passwordEncoder;
-
     @Autowired
-    public userControllerTest(userRepository userRepository, JwtService jwtService,
-                              MockMvc mockMvc, PasswordEncoder passwordEncoder) {
-        this.userRepository = userRepository;
-        this.jwtService = jwtService;
-        this.mockMvc = mockMvc;
-        this.passwordEncoder = passwordEncoder;
-    }
+    private userRepository userRepository;
+    @Autowired
+    private JwtService jwtService;
+    @Autowired
+    private MockMvc mockMvc;
+    @Autowired
+    private PasswordEncoder passwordEncoder;
+    @Autowired
+    private refreshTokenRepo refreshTokenRepo;
+    @Autowired roleRepository roleRepository;
+
+//    @Autowired
+//    public userControllerTest(userRepository userRepository, JwtService jwtService,
+//                              MockMvc mockMvc, PasswordEncoder passwordEncoder, refreshTokenRepo refreshTokenRepo) {
+//        this.userRepository = userRepository;
+//        this.jwtService = jwtService;
+//        this.mockMvc = mockMvc;
+//        this.passwordEncoder = passwordEncoder;
+//        this.refreshTokenRepo = refreshTokenRepo;
+//    }
 
     @BeforeEach
     void setUp() {
         userRepository.deleteAll();
+        refreshTokenRepo.deleteAll();
+        roleRepository.deleteAll();
+
+        Role userRole = new Role();
+        userRole.setRole("USER");
+        roleRepository.save(userRole);
     }
 
     @Test
@@ -141,10 +166,18 @@ public class userControllerTest {
     }
 
     @Test
+    @Transactional
     public void refreshTest() throws Exception {
-//        userRepository.save(new User("abdo", "ehab", "abdo@gmail.com",
-//                passwordEncoder.encode("123456")));
-        // bad refresh token
+        User user = new User("abdo", "ehab", "abdo@gmail.com",
+                passwordEncoder.encode("123456"));
+        userRepository.save(user);
+
+        String token = jwtService.generateRefreshToken(user.getEmail());
+        String hashedToken=jwtService.hashToken(token);
+
+        Date exp = jwtService.parseToken(token).getExpiration();
+        RefreshToken refreshToken = new RefreshToken(user.getEmail(), hashedToken, exp);
+        refreshTokenRepo.save(refreshToken);
         mockMvc.perform(
                 post("/refresh").
                         contentType(MediaType.APPLICATION_JSON).content("""
@@ -159,35 +192,38 @@ public class userControllerTest {
                         contentType(MediaType.APPLICATION_JSON).
                         content("""
                                 {
-                                "refreshToken":"dNRPILAzvCkmeZe91bQCvQhuQ9BD8a9lfh+8cz5ocoU="
+                                "refreshToken":"%s"
                                 }
-                                """)
+                                """.formatted(token))
         ).andExpect(status().isOk());
-
-
     }
 
     @Test
+    @Transactional
     public void logoutTest() throws Exception {
+        User user = new User("abdo", "ehab", "abdo@gmail.com",
+                passwordEncoder.encode("123456"));
+        userRepository.save(user);
+        String refreshToken = jwtService.generateRefreshToken(user.getEmail());
+        String hashedToken=jwtService.hashToken(refreshToken);
+
+        Date exp = jwtService.parseToken(refreshToken).getExpiration();
+        RefreshToken entity = new RefreshToken(user.getEmail(), hashedToken, exp);
+        refreshTokenRepo.save(entity);
+
+        String token = jwtService.generateAccessToken(user.getEmail());
         // bad email
         mockMvc.perform(post("/logout").
-                contentType(MediaType.APPLICATION_JSON).
-                content("""
-                        {
-                        "email":"fsfgfhg@gmail.com"
-                        }
-                        """)).andExpect(status().isBadRequest());
+                header("Authorization","Bearer "+"BAD")).
+                andExpect(status().isUnauthorized());
 
         mockMvc.perform(post("/logout").
-                contentType(MediaType.APPLICATION_JSON).
-                content("""
-                        {
-                        "email":"abdo@gmail.com"
-                        }
-                        """)).andExpect(status().isOk());
+                header("Authorization","Bearer "+token)).
+                andExpect(status().isOk());
     }
 
     @Test
+    @Transactional
     public void getUserTest() throws Exception {
         User user = userRepository.save(new User("abdo", "ehab", "abdo@gmail.com",
                 passwordEncoder.encode("123456")));
@@ -199,8 +235,7 @@ public class userControllerTest {
                 .andExpect(status().isOk()).
                 andExpect(jsonPath("$.firstName").value(user.getFirstName())).
                 andExpect(jsonPath("$.lastName").value(user.getLastName())).
-                andExpect(jsonPath("$.email").value(user.getEmail())).
-                andExpect(jsonPath("$.password").value(user.getPassword()));
+                andExpect(jsonPath("$.email").value(user.getEmail()));
         // not valid token
         mockMvc.perform(get("/user").
                         header("Authorization", "Bearer " +

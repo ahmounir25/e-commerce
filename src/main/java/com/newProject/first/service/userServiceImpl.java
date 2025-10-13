@@ -72,7 +72,7 @@ public class userServiceImpl implements userService {
             String accessToken = jwtService.generateAccessToken(user.getEmail());
             String refreshToken = jwtService.generateRefreshToken(user.getEmail());
             // hashing refresh token before save it to DB
-            String hashedRefreshToken = hashToken(refreshToken);
+            String hashedRefreshToken = jwtService.hashToken(refreshToken);
 
             RefreshToken entityRefresh = new RefreshToken();
             entityRefresh.setEmail(user.getEmail());
@@ -112,7 +112,7 @@ public class userServiceImpl implements userService {
     @Override
     public RefreshResponse refresh(String token) {
 
-        String hashed=hashToken(token);
+        String hashed=jwtService.hashToken(token);
         RefreshToken refreshToken = refreshTokenRepo.findByToken(hashed)
                 .orElseThrow(() -> new RuntimeException("Refresh token not found"));
 
@@ -134,14 +134,5 @@ public class userServiceImpl implements userService {
         return user ;
     }
 
-    public static String hashToken(String token) {
-        try {
-            MessageDigest digest = MessageDigest.getInstance("SHA-256");
-            byte[] hash = digest.digest(token.getBytes());
-            return Base64.getEncoder().encodeToString(hash);
-        } catch (NoSuchAlgorithmException e) {
-            throw new RuntimeException("Error hashing token", e);
-        }
-    }
 
 }
