@@ -28,7 +28,7 @@ jobs:
           --health-retries=10
 
     env:
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/ecommerce
+      SPRING_DATASOURCE_URL: jdbc:mysql://127.0.0.1:3306/ecommerce
       MYSQL_USER: ecommerce_user
       MYSQL_PASSWORD: ecommerce_pass
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
