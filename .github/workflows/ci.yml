@@ -11,6 +11,23 @@ on:
 jobs:
   test:
     runs-on: ubuntu-latest
+
+    services:
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_ROOT_PASSWORD: root
+          MYSQL_DATABASE: ecommerce
+          MYSQL_USER: ecommerce_user
+          MYSQL_PASSWORD: ecommerce_pass
+        ports:
+          - 3308:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -uroot -proot"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
     env:
       JWT_SECRET: ${{ secrets.JWT_SECRET }}
       LIFE_TIME_ACCESS: ${{secrets.LIFE_TIME_ACCESS}}
@@ -33,7 +50,17 @@ jobs:
           restore-keys: |
                 ${{ runner.os }}-maven-
 
-      - name: run test
+      -  name: Wait for MySQL
+        uses: jakejarvis/wait-action@v0.1.1
+        with:
+          time: '60s'
+
+      - name: run tests
+        env:
+          SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/ecommerce
+          MYSQL_USER: ecommerce_user
+          MYSQL_PASSWORD: ecommerce_pass
+
         run: mvn -B clean test
 
   deploy:
