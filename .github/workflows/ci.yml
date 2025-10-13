@@ -52,13 +52,19 @@ jobs:
                 ${{ runner.os }}-maven-
 
       - name: Wait for MySQL
-        uses: jakejarvis/wait-action@v0.1.1
-        with:
-          time: '60s'
+        run: |
+            echo "Waiting for MySQL..."
+            for i in {1..10}; do
+              if mysqladmin ping -h 127.0.0.1 -proot --silent; then
+                echo "MySQL is up!"
+                break
+              fi
+              sleep 5
+            done
 
       - name: run tests
         env:
-          SPRING_DATASOURCE_URL: jdbc:mysql://localhost:3306/ecommerce
+          SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/ecommerce
           MYSQL_USER: ecommerce_user
           MYSQL_PASSWORD: ecommerce_pass
 
