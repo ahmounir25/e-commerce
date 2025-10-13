@@ -63,9 +63,9 @@ public class userControllerTest {
         refreshTokenRepo.deleteAll();
         roleRepository.deleteAll();
 
-        Role userRole = new Role();
-        userRole.setRole("USER");
-        roleRepository.save(userRole);
+//        Role userRole = new Role();
+//        userRole.setRole("USER");
+//        roleRepository.save(userRole);
     }
 
     @Test
