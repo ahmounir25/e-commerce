@@ -16,7 +16,7 @@ services:
   app:
     build: .
     container_name: ecommerce_app
-    image: e-commerce-app:v2.0
+    image: e-commerce-app:v1.1
     environment:
       - SPRING_DATASOURCE_URL=jdbc:mysql://db:3306/${MYSQL_DATABASE}
       - SPRING_DATASOURCE_USERNAME=${MYSQL_USER}
