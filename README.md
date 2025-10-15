@@ -36,18 +36,4 @@ It includes authentication with JWT, database migrations with Flyway, background
 ```bash
 docker-compose up --build
 
----
-
-## 🧰 Environment Variables
-
-Create a `.env` file in your project root (excluded from Git):
-
-```env
-SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3306/ecommerce
-MYSQL_USER=ecommerce_user
-MYSQL_PASSWORD=ecommerce_pass
-
-JWT_SECRET=your_jwt_secret_key
-LIFE_TIME_ACCESS=3600000
-LIFE_TIME_REFRESH=604800000
 
